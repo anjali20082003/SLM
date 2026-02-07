@@ -13,7 +13,7 @@ SECRET_KEY = os.environ.get(
 )
 
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
 
 INSTALLED_APPS = [
     "daphne",
@@ -170,7 +170,7 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@slm.example.c
 
 # CORS (for separate frontend if needed)
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ORIGINS", "").split(",") if not DEBUG else []
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get("CORS_ORIGINS", "").split(",") if origin.strip()] if not DEBUG else []
 
 # Login
 LOGIN_URL = "/accounts/login/"
