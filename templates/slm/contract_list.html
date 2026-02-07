@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}License Contracts{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">License Contracts</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Contracts and renewal due dates</p>
+    </div>
+    {% if can_edit %}<a href="{% url 'slm:contract_add' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"><i class="fas fa-plus mr-2"></i>Add Contract</a>{% endif %}
+</div>
+
+<div class="mb-6 flex flex-wrap gap-2">
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'status' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}" class="px-4 py-2 {% if not request.GET.status %}bg-primary-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %} rounded-lg hover:bg-primary-700 hover:text-white text-sm font-medium">All</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'status' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}status=active" class="px-4 py-2 {% if request.GET.status == 'active' %}bg-primary-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %} rounded-lg hover:bg-primary-700 hover:text-white text-sm font-medium">Active</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'status' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}status=pending_renewal" class="px-4 py-2 {% if request.GET.status == 'pending_renewal' %}bg-primary-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %} rounded-lg hover:bg-primary-700 hover:text-white text-sm font-medium">Pending Renewal</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'status' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}status=expired" class="px-4 py-2 {% if request.GET.status == 'expired' %}bg-primary-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %} rounded-lg hover:bg-primary-700 hover:text-white text-sm font-medium">Expired</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'status' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}status=cancelled" class="px-4 py-2 {% if request.GET.status == 'cancelled' %}bg-primary-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %} rounded-lg hover:bg-primary-700 hover:text-white text-sm font-medium">Cancelled</a>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Software</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Vendor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Purchase</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expiry</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Renewal Due</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for c in contracts %}
+                <tr class="table-row-hover">
+                    <td class="px-6 py-4 font-medium"><a href="{% url 'slm:contract_detail' c.pk %}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ c.software_asset.name }}</a></td>
+                    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ c.vendor.company_name|default:"—" }}</td>
+                    <td class="px-6 py-4">{{ c.purchase_date|date:"M d, Y" }}</td>
+                    <td class="px-6 py-4">{{ c.expiry_date|date:"M d, Y"|default:"—" }}</td>
+                    <td class="px-6 py-4">{{ c.renewal_due_date|date:"M d, Y"|default:"—" }}</td>
+                    <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded text-xs font-medium {% if c.status == 'active' %}bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200{% elif c.status == 'pending_renewal' %}bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200{% else %}bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200{% endif %}">{{ c.get_status_display }}</span>
+                    <div class="mt-1 flex gap-2">
+                        <a href="{% url 'slm:contract_detail' c.pk %}" class="text-primary-600 dark:text-primary-400 text-sm">View</a>
+                        {% if can_edit %}<a href="{% url 'slm:contract_edit' c.pk %}" class="text-gray-600 dark:text-gray-400 text-sm hover:underline">Edit</a>{% endif %}
+                        {% if can_edit %}<a href="{% url 'slm:contract_delete' c.pk %}" class="text-red-600 dark:text-red-400 text-sm hover:underline" onclick="return confirm('Are you sure you want to delete this contract?')">Delete</a>{% endif %}
+                    </div>
+                </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No contracts found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <span class="text-sm text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Software Assets{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Software Assets</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Registry of all software and licenses</p>
+    </div>
+    {% if can_edit %}<a href="{% url 'slm:asset_add' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"><i class="fas fa-plus mr-2"></i>Add Asset</a>{% endif %}
+</div>
+
+<form method="get" class="mb-6 flex flex-wrap gap-2">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search name, description, tags..." class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm w-64">
+    <input type="text" name="category" value="{{ request.GET.category }}" placeholder="Category" class="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm w-32">
+    <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"><i class="fas fa-search mr-2"></i>Search</button>
+</form>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Version</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Licenses</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Used</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for asset in assets %}
+                <tr class="table-row-hover">
+                    <td class="px-6 py-4 font-medium"><a href="{% url 'slm:asset_detail' asset.pk %}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ asset.name }}</a></td>
+                    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ asset.category|default:"—" }}</td>
+                    <td class="px-6 py-4">{{ asset.version|default:"—" }}</td>
+                    <td class="px-6 py-4">{{ asset.total_licenses }}</td>
+                    <td class="px-6 py-4">{{ asset.used_licenses }}</td>
+                    <td class="px-6 py-4 text-sm">{{ asset.get_license_type_display }}</td>
+                    <td class="px-6 py-4 flex gap-2">
+                        <a href="{% url 'slm:asset_detail' asset.pk %}" class="text-primary-600 dark:text-primary-400 text-sm">View</a>
+                        {% if can_edit %}<a href="{% url 'slm:asset_edit' asset.pk %}" class="text-gray-600 dark:text-gray-400 text-sm hover:underline">Edit</a>{% endif %}
+                        {% if can_edit %}<a href="{% url 'slm:asset_delete' asset.pk %}" class="text-red-600 dark:text-red-400 text-sm hover:underline" onclick="return confirm('Are you sure you want to delete this asset?')">Delete</a>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No assets found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <span class="text-sm text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Confirm Deletion</h1>
+        
+        <p class="text-gray-600 dark:text-gray-300 mb-6">
+            Are you sure you want to delete the following item?
+        </p>
+        
+        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
+            <p class="font-medium text-gray-900 dark:text-white">
+                {% if object.name %}
+                    {{ object.name }}
+                {% elif object.company_name %}
+                    {{ object.company_name }}
+                {% elif object.invoice_number %}
+                    {{ object.invoice_number }}
+                {% else %}
+                    {{ object }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-8">
+            {% if object|lower|slice:":6" != "branch" and object|lower|slice:":6" != "depart" and object|lower|slice:":6" != "vendor" %}
+                This action will permanently delete the record. This cannot be undone.
+            {% else %}
+                This action will deactivate the record. This cannot be undone.
+            {% endif %}
+        </p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex gap-4">
+                <a href="{{ request.META.HTTP_REFERER|default:cancel_url|default:success_url }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
+                    Yes, Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

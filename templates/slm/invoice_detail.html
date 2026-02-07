@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'slm:invoice_list' %}" class="text-primary-600 dark:text-primary-400 text-sm font-medium mb-2 inline-block"><i class="fas fa-arrow-left mr-1"></i> Back to Invoices</a>
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Invoice {{ invoice.invoice_number }}</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">{{ invoice.vendor.company_name|default:"No vendor" }} · {{ invoice.invoice_date|date:"M d, Y" }}</p>
+        </div>
+        {% if can_edit %}
+        <div class="flex gap-2">
+            <a href="{% url 'slm:invoice_edit' invoice.pk %}" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium text-sm"><i class="fas fa-edit mr-2"></i>Edit</a>
+            <a href="{% url 'slm:invoice_delete' invoice.pk %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm" onclick="return confirm('Are you sure you want to delete this invoice?')"><i class="fas fa-trash mr-2"></i>Delete</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold mb-4">Invoice Details</h2>
+        <dl class="grid grid-cols-2 gap-4">
+            <dt class="text-gray-500 dark:text-gray-400">Vendor</dt><dd>{{ invoice.vendor.company_name|default:"—" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Date</dt><dd>{{ invoice.invoice_date|date:"M d, Y" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Subtotal</dt><dd>{{ invoice.subtotal|floatformat:2|intcomma }} {{ invoice.currency }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Tax</dt><dd>{{ invoice.tax|floatformat:2|intcomma }} {{ invoice.currency }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Total</dt><dd class="font-semibold">{{ invoice.total|floatformat:2|intcomma }} {{ invoice.currency }}</dd>
+            {% if invoice.license_contract %}<dt class="text-gray-500 dark:text-gray-400">Contract</dt><dd><a href="{% url 'slm:contract_detail' invoice.license_contract_id %}" class="text-primary-600 dark:text-primary-400">{{ invoice.license_contract.software_asset.name }}</a></dd>{% endif %}
+        </dl>
+        {% if invoice.notes %}<p class="mt-4 text-gray-600 dark:text-gray-300">{{ invoice.notes }}</p>{% endif %}
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold">Payments</h2>
+            {% if can_edit %}<a href="{% url 'slm:payment_add' invoice_id=invoice.pk %}" class="text-sm text-primary-600 dark:text-primary-400 font-medium"><i class="fas fa-plus mr-1"></i>Add Payment</a>{% endif %}
+        </div>
+        <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% for p in invoice.payments.all %}
+            <li class="py-3 flex justify-between items-center">
+                <span>{{ p.get_payment_mode_display }} · {{ p.paid_on|date:"M d, Y" }} — {{ p.amount|floatformat:2|intcomma }}</span>
+                {% if can_edit %}<a href="{% url 'slm:payment_edit' p.pk %}" class="text-sm text-gray-600 dark:text-gray-400 hover:underline">Edit</a>{% endif %}
+            </li>
+            {% empty %}
+            <li class="py-3 text-gray-500 dark:text-gray-400">No payments recorded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

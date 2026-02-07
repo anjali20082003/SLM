@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Invoices{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Invoices</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Invoice and payment records</p>
+    </div>
+    {% if can_edit %}<a href="{% url 'slm:invoice_add' %}" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm"><i class="fas fa-plus mr-2"></i>Add Invoice</a>{% endif %}
+</div>
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Invoice #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Vendor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Currency</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for inv in invoices %}
+                <tr class="table-row-hover">
+                    <td class="px-6 py-4 font-medium"><a href="{% url 'slm:invoice_detail' inv.pk %}" class="text-primary-600 dark:text-primary-400 hover:underline">{{ inv.invoice_number }}</a></td>
+                    <td class="px-6 py-4 text-gray-500 dark:text-gray-400">{{ inv.vendor.company_name|default:"—" }}</td>
+                    <td class="px-6 py-4">{{ inv.invoice_date|date:"M d, Y" }}</td>
+                    <td class="px-6 py-4">{{ inv.total|floatformat:2|intcomma }}</td>
+                    <td class="px-6 py-4">{{ inv.currency }}</td>
+                    <td class="px-6 py-4 flex gap-2">
+                        <a href="{% url 'slm:invoice_detail' inv.pk %}" class="text-primary-600 dark:text-primary-400 text-sm">View</a>
+                        {% if can_edit %}<a href="{% url 'slm:invoice_edit' inv.pk %}" class="text-gray-600 dark:text-gray-400 text-sm hover:underline">Edit</a>{% endif %}
+                        {% if can_edit %}<a href="{% url 'slm:invoice_delete' inv.pk %}" class="text-red-600 dark:text-red-400 text-sm hover:underline" onclick="return confirm('Are you sure you want to delete this invoice?')">Delete</a>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No invoices found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <span class="text-sm text-gray-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Previous</a>{% endif %}
+            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-sm">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

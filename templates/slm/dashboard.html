@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Overview of software assets, contracts, and renewals</p>
+    </div>
+    {% if can_edit %}
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'slm:asset_add' %}" class="inline-flex items-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium"><i class="fas fa-plus mr-1"></i>Asset</a>
+        <a href="{% url 'slm:contract_add' %}" class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"><i class="fas fa-plus mr-1"></i>Contract</a>
+        <a href="{% url 'slm:vendor_add' %}" class="inline-flex items-center px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"><i class="fas fa-plus mr-1"></i>Vendor</a>
+        <a href="{% url 'slm:invoice_add' %}" class="inline-flex items-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium"><i class="fas fa-plus mr-1"></i>Invoice</a>
+        <a href="{% url 'slm:allocation_add' %}" class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"><i class="fas fa-plus mr-1"></i>Allocation</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Stats grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Assets</p>
+                <p class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ total_assets }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                <i class="fas fa-cubes text-primary-600 dark:text-primary-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Contracts</p>
+                <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ active_contracts }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <i class="fas fa-file-contract text-green-600 dark:text-green-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Expiring in 30 Days</p>
+                <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">{{ expiring_in_30 }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Spend</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_spend|floatformat:0|intcomma }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <i class="fas fa-coins text-gray-600 dark:text-gray-400 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts -->
+{% if expiring_in_30 > 0 or expired_pending > 0 %}
+<div class="mb-8 p-4 rounded-xl border {% if expired_pending %}bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800{% else %}bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800{% endif %}">
+    <p class="font-medium">
+        {% if expired_pending %}<i class="fas fa-times-circle text-red-500 mr-2"></i>{{ expired_pending }} contract(s) expired. {% endif %}
+        {% if expiring_in_30 %}<i class="fas fa-clock text-amber-500 mr-2"></i>{{ expiring_in_30 }} contract(s) expiring in 30 days.{% endif %}
+    </p>
+    <a href="{% url 'slm:contract_list' %}?status=pending_renewal" class="text-primary-600 dark:text-primary-400 text-sm font-medium mt-2 inline-block">View contracts →</a>
+</div>
+{% endif %}
+
+<!-- Expiring soon table -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold">Expiring in 30 Days</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Contracts requiring renewal attention</p>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Software</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Vendor</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Renewal Due</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expiry</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                {% for c in expiring_contracts %}
+                <tr class="table-row-hover">
+                    <td class="px-6 py-4 whitespace-nowrap font-medium">{{ c.software_asset.name }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">{{ c.vendor.company_name|default:"—" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ c.renewal_due_date|date:"M d, Y" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ c.expiry_date|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No contracts expiring in the next 30 days.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

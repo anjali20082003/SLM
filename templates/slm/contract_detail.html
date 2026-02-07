@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Contract - {{ contract.software_asset.name }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'slm:contract_list' %}" class="text-primary-600 dark:text-primary-400 text-sm font-medium mb-2 inline-block"><i class="fas fa-arrow-left mr-1"></i> Back to Contracts</a>
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ contract.software_asset.name }}</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">{{ contract.vendor.company_name|default:"No vendor" }} · {{ contract.get_status_display }}</p>
+        </div>
+        {% if can_edit %}
+        <div class="flex gap-2">
+            <a href="{% url 'slm:contract_edit' contract.pk %}" class="inline-flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium text-sm"><i class="fas fa-edit mr-2"></i>Edit</a>
+            <a href="{% url 'slm:contract_delete' contract.pk %}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm" onclick="return confirm('Are you sure you want to delete this contract?')"><i class="fas fa-trash mr-2"></i>Delete</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold mb-4">Contract Details</h2>
+        <dl class="grid grid-cols-2 gap-4">
+            <dt class="text-gray-500 dark:text-gray-400">Software</dt><dd><a href="{% url 'slm:asset_detail' contract.software_asset_id %}" class="text-primary-600 dark:text-primary-400">{{ contract.software_asset.name }}</a></dd>
+            <dt class="text-gray-500 dark:text-gray-400">Vendor</dt><dd>{{ contract.vendor.company_name|default:"—" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Purchase Date</dt><dd>{{ contract.purchase_date|date:"M d, Y" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Duration</dt><dd>{{ contract.duration_months }} months</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Expiry Date</dt><dd>{{ contract.expiry_date|date:"M d, Y"|default:"—" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Renewal Due</dt><dd>{{ contract.renewal_due_date|date:"M d, Y"|default:"—" }}</dd>
+            <dt class="text-gray-500 dark:text-gray-400">Status</dt><dd><span class="px-2 py-1 rounded text-xs font-medium {% if contract.status == 'active' %}bg-green-100 dark:bg-green-900/30{% elif contract.status == 'pending_renewal' %}bg-amber-100 dark:bg-amber-900/30{% else %}bg-gray-100 dark:bg-gray-700{% endif %}">{{ contract.get_status_display }}</span></dd>
+            <dt class="text-gray-500 dark:text-gray-400">Support Level</dt><dd>{{ contract.get_support_level_display }}</dd>
+        </dl>
+        {% if contract.notes %}<p class="mt-4 text-gray-600 dark:text-gray-300">{{ contract.notes }}</p>{% endif %}
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold mb-4">Linked Invoices</h2>
+        <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% for inv in contract.invoices.all %}
+            <li class="py-3 flex justify-between"><a href="{% url 'slm:invoice_detail' inv.pk %}" class="text-primary-600 dark:text-primary-400">{{ inv.invoice_number }}</a> <span>{{ inv.total }} {{ inv.currency }}</span></li>
+            {% empty %}
+            <li class="py-3 text-gray-500 dark:text-gray-400">No invoices linked.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

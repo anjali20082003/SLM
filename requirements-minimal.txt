@@ -1,0 +1,10 @@
+# Minimal deps to run web + API (no Celery, Channels, Redis)
+Django>=4.2,<5.0
+djangorestframework>=3.14
+django-cors-headers>=4.3
+django-filter>=23.5
+drf-spectacular>=0.27
+djangorestframework-simplejwt>=5.3
+whitenoise>=6.6
+python-dateutil>=2.8
+gunicorn>=21.0
